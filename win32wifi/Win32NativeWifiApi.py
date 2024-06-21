@@ -77,6 +77,7 @@ except AttributeError:
             DOT11_BSS_TYPE_DICT_KV.items() }    
 
 # The DOT11_PHY_TYPE enumeration defines an 802.11 PHY and media type.
+# https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/windot11/ne-windot11-_dot11_phy_type
 DOT11_PHY_TYPE = c_uint
 DOT11_PHY_TYPE_DICT = {0: "dot11_phy_type_unknown",
                        1: "dot11_phy_type_fhss",
@@ -95,6 +96,7 @@ DOT11_PHY_TYPE_DICT = {0: "dot11_phy_type_unknown",
 
 # The DOT11_AUTH_ALGORITHM enumerated type defines a wireless LAN
 # authentication algorithm.
+# https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wlantypes/ne-wlantypes-_dot11_auth_algorithm
 DOT11_AUTH_ALGORITHM_TYPE = c_uint
 DOT11_AUTH_ALGORITHM_DICT = {1: "DOT11_AUTH_ALGO_80211_OPEN",
                              2: "DOT11_AUTH_ALGO_80211_SHARED_KEY",
@@ -112,6 +114,7 @@ DOT11_AUTH_ALGORITHM_DICT = {1: "DOT11_AUTH_ALGO_80211_OPEN",
 
 # The DOT11_CIPHER_ALGORITHM enumerated type defines a cipher algorithm for
 # data encryption and decryption.
+# https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wlantypes/ne-wlantypes-_dot11_cipher_algorithm
 DOT11_CIPHER_ALGORITHM_TYPE = c_uint
 DOT11_CIPHER_ALGORITHM_DICT = {0x00: "DOT11_CIPHER_ALGO_NONE",
                                0x01: "DOT11_CIPHER_ALGO_WEP40",
@@ -218,6 +221,7 @@ class WLAN_NOTIFICATION_ACM_ENUM(Enum):
     wlan_notification_acm_end                           = 27
 
 
+# https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/ne-wlanapi-wlan_notification_msm-r1
 class WLAN_NOTIFICATION_MSM_ENUM(Enum):
     wlan_notification_msm_start                         = 0
     wlan_notification_msm_associating                   = 1 
@@ -1064,6 +1068,7 @@ def WlanDisconnect(hClientHandle, pInterfaceGuid):
         raise Exception("WlanDisconnect failed.", result)
     return result
 
+# https://learn.microsoft.com/en-us/windows/win32/api/wlanapi/ne-wlanapi-wlan_intf_opcode
 WLAN_INTF_OPCODE = c_uint
 WLAN_INTF_OPCODE_DICT = {
     0x000000000: "wlan_intf_opcode_autoconf_start",
