@@ -28,9 +28,44 @@ import time
 import xmltodict
 
 from comtypes import GUID
-from win32wifi.Win32NativeWifiApi import *
+from .Win32NativeWifiApi import *
 
 NULL = None
+
+# https://www.oreilly.com/library/view/80211-wireless-networks/0596100523/ch04.html
+RSN_IE_CIPHER_SUITES_DICT = {
+    b'\x00\x0f\xac\x01': "WEP40",
+    b'\x00\x0f\xac\x02': "TKIP",
+    b'\x00\x0f\xac\x04': "CCMP",
+    b'\x00\x0f\xac\x05': "WEP104"}
+
+AKM_SUITES_DICT = {
+    b'\x00\x0f\xac\x01': "802.1X (EPA)",
+    b'\x00\x0f\xac\x02': "PSK",
+    b'\x00\x0f\xac\x03': "FT over 802.1X"}
+
+# No information about the following dictionaries
+# WPA_IE_CIPHER_SUITES_DICT = {
+#     b'\x00\x0f\xac\x01': 'WPA-TKIP',
+#     b'\x00\x0f\xac\x02': 'WPA-AES',
+#     b'\x00\x0f\xac\x04': 'WPA2-TKIP',
+#     b'\x00\x0f\xac\x05': 'WPA2-AES',
+#     b'\x00\x0f\xac\x08': 'GCMP-256',
+#     b'\x00\x0f\xac\x09': 'GCMP-128',
+#     b'\x00\x0f\xac\x0a': 'CCMP-256',
+#     b'\x00\x0f\xac\x0b': 'BIP-GMAC-128',
+#     b'\x00\x0f\xac\x0c': 'BIP-GMAC-256',
+#     b'\x00\x0f\xac\x0d': 'BIP-CMAC-256'
+# }
+
+# WPA_IE_AUTH_SUITES_DICT = {
+#     b'\x00\x0f\xac\x01': 'MGT',
+#     b'\x00\x0f\xac\x02': 'PSK',
+#     b'\x00\x0f\xac\x03': 'FT/PSK',
+#     b'\x00\x0f\xac\x04': 'FT/MGT',
+#     b'\x00\x0f\xac\x05': 'PSK/SHA-256',
+#     b'\x00\x0f\xac\x06': 'MGT/SHA-256'
+# }
 
 class WirelessInterface(object):
     def __init__(self, wlan_iface_info):
@@ -106,6 +141,8 @@ class WirelessNetworkBss(object):
         self.rssi = bss_entry.Rssi
         self.ch_center_frequency = bss_entry.ChCenterFrequency
         self.capabilities = bss_entry.CapabilityInformation
+        self.rsn_ie = {}
+        self.wpa_ie = {}
         self.__process_information_elements(bss_entry)
         self.__process_information_elements2()
 
@@ -132,6 +169,99 @@ class WirelessNetworkBss(object):
             index += length
             ie = InformationElement(eid, length, body)
             self.information_elements.append(ie)
+            # Parsing RSN IE
+            if eid == 48:  # RSN IE
+                self.__parse_rsn_ie(body)
+            # Parsing WPA IE (Checking WPA OUI in vendor-specific IE)
+            elif eid == 221 and body[:3] == b'\x00\x50\xF2' and body[3] == 1:  # WPA IE
+                self.__parse_wpa_ie(body[4:])  # Exclude OUI and type
+
+    def __parse_rsn_ie(self, rsn_ie):
+        # Check the minimum length of RSN IE 18 = {
+        #     version(2)
+        #     group cipher suite(4)
+        #     pairwise cipher count(2)
+        #     minimum 1 pairwise cipher(4)
+        #     authentication suite count(2)
+        #     minimum 1 authentication suite(4)
+        #   }
+        if len(rsn_ie) < 18:
+            return None
+
+        # Parse the version
+        version = int.from_bytes(b''.join(rsn_ie[0:2]), byteorder='little')
+
+        # Parse the group cipher suite
+        group_cipher_suite = RSN_IE_CIPHER_SUITES_DICT.get(b''.join(rsn_ie[2:6]), 'Unknown')
+
+        # Parse the pairwise cipher count
+        pairwise_cipher_count = int.from_bytes(b''.join(rsn_ie[6:8]), byteorder='little')
+        offset = 8
+
+        # Parse the pairwise cipher suite list
+        pairwise_cipher_suites = []
+        for _ in range(pairwise_cipher_count):
+            pairwise_cipher_suites.append(RSN_IE_CIPHER_SUITES_DICT.get(b''.join(rsn_ie[offset:offset+4]), 'Unknown'))
+            offset += 4
+
+        # Parse the authentication suite count
+        auth_suite_count = int.from_bytes(b''.join(rsn_ie[offset:offset+2]), byteorder='little')
+        offset += 2
+
+        # Parse the authentication suite list
+        auth_suites = []
+        for _ in range(auth_suite_count):
+            auth_suites.append(AKM_SUITES_DICT.get(b''.join(rsn_ie[offset:offset+4]), 'Unknown'))
+            offset += 4
+
+        # Parse the RSN capabilities (if present)
+        rsn_capabilities = rsn_ie[offset:offset+2] if len(rsn_ie) >= offset + 2 else None
+
+        self.rsn_ie = {
+            'version': version,
+            'group_cipher_suite': group_cipher_suite,
+            'pairwise_cipher_suites': pairwise_cipher_suites,
+            'auth_suites': auth_suites,
+            'rsn_capabilities': rsn_capabilities
+        }
+
+    def __parse_wpa_ie(self, wpa_ie):
+        # Check the minimum length of WPA IE
+        if len(wpa_ie) < 6:
+            return None
+
+        # Parse the WPA version
+        wpa_version = int.from_bytes(b''.join(wpa_ie[0:2]), byteorder='little')
+
+        # Parse the multicast cipher suite
+        multicast_cipher_suite = int.from_bytes(b''.join(wpa_ie[2:6]))
+
+        # Parse the unicast cipher count
+        unicast_cipher_count = int.from_bytes(b''.join(wpa_ie[6:8]), byteorder='little')
+        offset = 8
+
+        # Parse the unicast cipher suite list
+        unicast_cipher_suites = []
+        for _ in range(unicast_cipher_count):
+            unicast_cipher_suites.append(int.from_bytes(b''.join(wpa_ie[offset:offset+4])))
+            offset += 4
+
+        # Parse the authentication suite count
+        auth_suite_count = int.from_bytes(b''.join(wpa_ie[offset:offset+2]), byteorder='little')
+        offset += 2
+
+        # Parse the authentication suite list
+        auth_suites = []
+        for _ in range(auth_suite_count):
+            auth_suites.append(int.from_bytes(b''.join(wpa_ie[offset:offset+4])))
+            offset += 4
+
+        self.wpa_ie = {
+            'wpa_version': wpa_version,
+            'multicast_cipher_suite': multicast_cipher_suite,
+            'unicast_cipher_suites': unicast_cipher_suites,
+            'auth_suites': auth_suites
+        }
 
     def __str__(self):
         result = ""
