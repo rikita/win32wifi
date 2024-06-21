@@ -215,7 +215,10 @@ class WirelessNetworkBss(object):
             offset += 4
 
         # Parse the RSN capabilities (if present)
-        rsn_capabilities = rsn_ie[offset:offset+2] if len(rsn_ie) >= offset + 2 else None
+        if len(rsn_ie) >= offset + 2:
+            rsn_capabilities = "0x" + rsn_ie[offset].hex() + rsn_ie[offset+1].hex()
+        else:
+            None
 
         self.rsn_ie = {
             'version': version,
