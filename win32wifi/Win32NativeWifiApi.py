@@ -82,11 +82,14 @@ DOT11_PHY_TYPE_DICT = {0: "dot11_phy_type_unknown",
                        1: "dot11_phy_type_fhss",
                        2: "dot11_phy_type_dsss",
                        3: "dot11_phy_type_irbaseband",
-                       4: "dot11_phy_type_ofdm",
-                       5: "dot11_phy_type_hrdsss",
-                       6: "dot11_phy_type_erp",
-                       7: "dot11_phy_type_ht",
-                       8: "dot11_phy_type_vht",
+                       4: "dot11_phy_type_ofdm (802.11a)",
+                       5: "dot11_phy_type_hrdsss (802.11b)",
+                       6: "dot11_phy_type_erp (802.11g)",
+                       7: "dot11_phy_type_ht (802.11n)",
+                       8: "dot11_phy_type_vht (802.11ac)",
+                       9: "dot11_phy_type_dmg (802.11ad)",
+                       10: "dot11_phy_type_he (802.11ax)",
+                       11: "dot11_phy_type_eht (802.11be)",
                        0x80000000: "dot11_phy_type_IHV_start",
                        0xffffffff: "dot11_phy_type_IHV_end"}
 
@@ -100,6 +103,10 @@ DOT11_AUTH_ALGORITHM_DICT = {1: "DOT11_AUTH_ALGO_80211_OPEN",
                              5: "DOT11_AUTH_ALGO_WPA_NONE",
                              6: "DOT11_AUTH_ALGO_RSNA",
                              7: "DOT11_AUTH_ALGO_RSNA_PSK",
+                             8: "DOT11_AUTH_ALGO_WPA3",
+                             9: "DOT11_AUTH_ALGO_WPA3_SAE",
+                             10: "DOT11_AUTH_ALGO_OWE",
+                             11: "DOT11_AUTH_ALGO_WPA3_ENT",
                              0x80000000: "DOT11_AUTH_ALGO_IHV_START",
                              0xffffffff: "DOT11_AUTH_ALGO_IHV_END"}
 
@@ -111,6 +118,13 @@ DOT11_CIPHER_ALGORITHM_DICT = {0x00: "DOT11_CIPHER_ALGO_NONE",
                                0x02: "DOT11_CIPHER_ALGO_TKIP",
                                0x04: "DOT11_CIPHER_ALGO_CCMP",
                                0x05: "DOT11_CIPHER_ALGO_WEP104",
+                               0x06: "DOT11_CIPHER_ALGO_BIP",
+                               0x08: "DOT11_CIPHER_ALGO_GCMP",
+                               0x09: "DOT11_CIPHER_ALGO_GCMP_256",
+                               0x0a: "DOT11_CIPHER_ALGO_CCMP_256",
+                               0x0b: "DOT11_CIPHER_ALGO_BIP_GMAC_128",
+                               0x0c: "DOT11_CIPHER_ALGO_BIP_GMAC_256",
+                               0x0d: "DOT11_CIPHER_ALGO_BIP_CMAC_256",
                                0x100: "DOT11_CIPHER_ALGO_WPA_USE_GROUP",
                                0x100: "DOT11_CIPHER_ALGO_RSN_USE_GROUP",
                                0x101: "DOT11_CIPHER_ALGO_WEP",
@@ -220,7 +234,9 @@ class WLAN_NOTIFICATION_MSM_ENUM(Enum):
     wlan_notification_msm_peer_leave                    = 12
     wlan_notification_msm_adapter_removal               = 13
     wlan_notification_msm_adapter_operation_mode_change = 14
-    wlan_notification_msm_end                           = 15
+    wlan_notification_msm_link_degraded                 = 15
+    wlan_notification_msm_link_improved                 = 16
+    wlan_notification_msm_end                           = 17
 
 
 class WLAN_HOSTED_NETWORK_NOTIFICATION_CODE_ENUM(Enum):
@@ -1067,10 +1083,14 @@ WLAN_INTF_OPCODE_DICT = {
     14: "wlan_intf_opcode_certified_safe_mode",
     15: "wlan_intf_opcode_hosted_network_capable",
     16: "wlan_intf_opcode_management_frame_protection_capable",
+    17: "wlan_intf_opcode_secondary_sta_interfaces",
+    18: "wlan_intf_opcode_secondary_sta_synchronized_connections",
+    19: "wlan_intf_opcode_realtime_connection_quality",
+    20: "wlan_intf_opcode_qos_info",
     0x0fffffff: "wlan_intf_opcode_autoconf_end",
     0x10000100: "wlan_intf_opcode_msm_start",
-    17: "wlan_intf_opcode_statistics",
-    18: "wlan_intf_opcode_rssi",
+    21: "wlan_intf_opcode_statistics",
+    22: "wlan_intf_opcode_rssi",
     0x1fffffff: "wlan_intf_opcode_msm_end",
     0x20010000: "wlan_intf_opcode_security_start",
     0x2fffffff: "wlan_intf_opcode_security_end",
